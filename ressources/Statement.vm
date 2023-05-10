@@ -1,0 +1,92 @@
+package dao;$import
+
+public class $TableDAO{
+
+    private OracleSession session;
+
+    public $TableDAO(OracleSession session) {
+        this.session = session;
+    }
+
+    public List<$Table> readTable(){
+        try{
+            List<$Table> list = new ArrayList<>();
+            Statement stmt = this.session.getConn().createStatement();
+            ResultSet resultat = stmt.executeQuery("SELECT * FROM $Table");
+
+            while(resultat.next()){
+                $Table element = new $Table();
+                #foreach($att in $AttributsList)
+                    element.set$att.getName()(resultat.get$att.getTypeName()("$att.getName()"));
+                #end
+                list.add(element);
+            }
+            stmt.close();
+            resultat.close();
+            return list;
+
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public boolean deleteElement($Table element){
+        try{
+            PreparedStatement stmt = this.session.getConn().prepareStatement("DELETE FROM $Table WHERE #set($first = true)#foreach($cle in $clePrimaires)#if($first)#set($first = false)#else AND#end $cle.getName()= ?#end");
+            #set($i = 1)
+            #foreach($cle in $clePrimaires)
+                stmt.set$cle.getTypeName()($i, element.get$cle.getName()());
+                #set($i = $i + 1)
+            #end
+            stmt.executeUpdate();
+            stmt.close();
+            return true;
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean addElement($Table element){
+        try{
+            PreparedStatement stmt = this.session.getConn().prepareStatement("INSERT INTO $Table(#set($first = true)#foreach($att in $AttributsList)#if($first)#set($first = false)#else, #end $att.getName()#end) VALUES (#set($first = true)#foreach($att in $AttributsList)#if($first)#set($first = false)#else, #end ?#end)");
+            #set($i = 1)
+            #foreach($att in $AttributsList)
+                stmt.set$att.getTypeName()($i, element.get$att.getName()());
+                #set($i = $i + 1)
+            #end
+            stmt.executeUpdate();
+            stmt.close();
+            return true;
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean updateElement($Table element){
+        try  {
+            PreparedStatement stmt = this.session.getConn().prepareStatement("UPDATE $Table SET #set($first = true)#foreach($att in $AttributsList)#if($first)#set($first = false)#else, #end $att.getName() = ?#end WHERE #set($first = true)#foreach($cle in $clePrimaires)#if($first)#set($first = false)#else AND #end $cle.getName() = ?#end");
+            #set($i = 1)
+            #foreach($att in $AttributsList)
+                stmt.set$att.getTypeName()($i, element.get$att.getName()());
+                #set($i = $i + 1)
+            #end
+            #foreach($cle in $clePrimaires)
+                stmt.set$cle.getTypeName()($i, element.get$cle.getName()());
+                #set($i = $i + 1)
+            #end
+            stmt.executeUpdate();
+            stmt.close();
+            return true;
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+   #foreach($proc in $procedures)
+
+   #end
+}

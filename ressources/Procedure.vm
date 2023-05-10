@@ -1,0 +1,56 @@
+package dao;$import
+
+
+public class ${package}DAO {
+
+    private OracleSession session;
+
+    public ${package}DAO(OracleSession session){
+        this.session = session;
+    }
+#foreach($proc in $procedures)
+    public $proc.getTypeRetour() $proc.getName()(#set($first = true)#foreach($param in $proc.getParametres())#if($param.inOut=="IN")#if($first)#set($first = false)#else,#end$param.getType() $param.getName()#end#end){
+        try{
+            CallableStatement cs = session.getConn().prepareCall("{call $package.$proc.getName()(#foreach($param in $proc.getParametres())?#if($foreach.hasNext),#end#end)}");
+            #set($i = 1)
+            #foreach($param in $proc.getParametres())
+                #if($param.inOut == "IN")
+                cs.set$param.getType()($i, $param.getName());
+                    #set($i = $i + 1)
+                #end
+                #if($param.inOut == "OUT")
+                cs.registerOutParameter($i, $param.getType());
+                    #set($i = $i + 1)
+                #end
+            #end
+            cs.execute();
+
+            #if($proc.getTypeRetour() == "String")
+                ResultSet rs = (ResultSet) cs.getObject(1);
+                if(rs.next()){
+                    try{
+                        XMLType xml = (XMLType) rs.getObject(1);
+                        return xml.getString();
+                    }catch(Exception e){
+                        return "La procédure ne retourne pas de XML";
+                    }
+                }
+            #end
+
+            #if($proc.getTypeRetour() == "boolean")
+            cs.close();
+            return true;
+            #end
+
+        }catch(SQLException e){
+            e.printStackTrace();}
+    #if($proc.getTypeRetour() == "boolean")
+    return false;
+    #end
+    #if($proc.getTypeRetour() == "String")
+    return null;
+    #end
+
+    }
+#end
+}

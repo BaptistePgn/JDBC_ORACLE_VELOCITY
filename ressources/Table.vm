@@ -1,0 +1,33 @@
+package bean;$import
+
+public class $Table {
+ 
+  #foreach($att in $AttributsList)
+	private $att.getType() $att.getFormat();
+  #end
+  
+   	public $Table() {;}
+   	
+   	public $Table(#set($first = true)#foreach($att in $AttributsList)#if($first)#set($first = false)#else, #end$att.getType() $att.getFormat()#end) {
+    #foreach($att in $AttributsList)
+	this.$att.getFormat() = $att.getFormat(); 
+    #end
+}
+  
+  #foreach($att in $AttributsList)
+	public $att.getType() get$att.getName()() {
+		return this.$att.getFormat();
+	}
+    public void set$att.getName()($att.getType() $att.getFormat()) {
+        this.$att.getFormat() = $att.getFormat();
+    }
+  #end
+  public String toString() {
+  		String ret = "";
+      #set($first = true)#foreach($att in $AttributsList)
+  ret += "#if($first)#set($first = false)#else - #end$att.getName(): "+this.$att.getFormat();
+      #end
+    ret += "\n";
+  return ret;
+	}
+}
